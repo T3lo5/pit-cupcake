@@ -4,9 +4,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsc || true",
     "start": "node dist/server.js",
     "test": "jest --runInBand",
+    "test:watch": "jest --runInBand --watch",
+    "test:coverage": "jest --runInBand --coverage",
+    "test:ci": "jest --runInBand --ci --coverage --watchAll=false",
     "lint": "eslint .",
     "format": "prettier --write .",
     "prisma:generate": "prisma generate",

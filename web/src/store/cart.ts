@@ -3,9 +3,9 @@ import { create } from 'zustand';
 type CartItem = {
   productId: string;
   name: string;
-  priceCents: number; // inteiro em centavos
+  priceCents: number;
   image?: string | null;
-  quantity: number;    // inteiro >= 1
+  quantity: number;
 };
 
 type CartState = {
@@ -14,7 +14,6 @@ type CartState = {
   remove: (productId: string) => void;
   clear: () => void;
   setQty: (productId: string, qty: number) => void;
-  // Opcional: se quiser manter uma função para subtotal (não usada no componente acima)
   subtotal: () => number;
 };
 
@@ -23,10 +22,8 @@ const STORAGE_KEY = 'cart_items';
 const normalizeItem = (i: any): CartItem => ({
   productId: String(i?.productId ?? ''),
   name: String(i?.name ?? ''),
-  // Garante inteiro em centavos
   priceCents: Math.max(0, Math.floor(Number(i?.priceCents ?? 0) || 0)),
   image: i?.image ?? null,
-  // Garante quantidade mínima 1
   quantity: Math.max(1, Math.floor(Number(i?.quantity ?? 1) || 1)),
 });
 
@@ -51,7 +48,7 @@ export const useCart = create<CartState>((set, get) => ({
 
   add: (item, qty = 1) => {
     const q = Math.max(1, Math.floor(Number(qty) || 1));
-    const price = Math.max(0, Math.floor(Number(item.priceCents) || 0)); // centavos inteiros
+    const price = Math.max(0, Math.floor(Number(item.priceCents) || 0));
     const items = [...get().items];
     const idx = items.findIndex((it) => it.productId === item.productId);
     if (idx >= 0) {
@@ -93,7 +90,6 @@ export const useCart = create<CartState>((set, get) => ({
     set({ items });
   },
 
-  // opcional, caso queira usar
   subtotal: () => {
     const items = get().items;
     return items.reduce((acc, i) => {

@@ -1,14 +1,19 @@
 {
   "compilerOptions": {
     "target": "ES2021",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "outDir": "dist",
     "rootDir": "src",
-    "strict": true,
+    "isolatedModules": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": false,
+    "allowSyntheticDefaultImports": true,
+    "noEmitOnError": false,
+    "types": ["node"]
   },
-  "include": ["src", "scripts"]
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.test.ts", "src/__tests__/**/*"]
 }

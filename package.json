@@ -4,9 +4,19 @@
   "scripts": {
     "prepare": "husky install",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "npm run test:api && npm run test:web",
+    "test:api": "cd api && npm test",
+    "test:web": "cd web && npm test",
+    "test:api:watch": "cd api && npm run test:watch",
+    "test:web:watch": "cd web && npm run test:watch",
+    "test:coverage": "npm run test:api:coverage && npm run test:web:coverage",
+    "test:api:coverage": "cd api && npm run test:coverage",
+    "test:web:coverage": "cd web && npm run test:coverage"
   },
   "devDependencies": {
+    "@testing-library/user-event": "^14.6.1",
+    "@types/testing-library__user-event": "^4.1.1",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
