@@ -1,0 +1,139 @@
+# ==============================================================================
+# Docker Compose - Configuração completa para desenvolvimento e produção
+# ==============================================================================
+version: '3.8'
+
+services:
+  # ==============================================================================
+  # Aplicação Principal - Cupcakes API
+  # ==============================================================================
+  cupcakes-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: cupcakes-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/cupcakes_db?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cupcakes-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==============================================================================
+  # Banco de Dados PostgreSQL
+  # ==============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: cupcakes-postgres
+    environment:
+      POSTGRES_DB: cupcakes_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - cupcakes-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cupcakes_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==============================================================================
+  # Redis para Cache (Opcional)
+  # ==============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: cupcakes-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cupcakes-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # ==============================================================================
+  # Adminer - Interface Web para PostgreSQL (Desenvolvimento)
+  # ==============================================================================
+  adminer:
+    image: adminer:latest
+    container_name: cupcakes-adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+    networks:
+      - cupcakes-network
+    restart: unless-stopped
+    profiles:
+      - dev
+
+  # ==============================================================================
+  # Nginx - Proxy Reverso (Produção)
+  # ==============================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: cupcakes-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - cupcakes-api
+    networks:
+      - cupcakes-network
+    restart: unless-stopped
+    profiles:
+      - production
+
+# ==============================================================================
+# Volumes Persistentes
+# ==============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ==============================================================================
+# Rede Personalizada
+# ==============================================================================
+networks:
+  cupcakes-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

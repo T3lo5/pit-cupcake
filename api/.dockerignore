@@ -1,0 +1,100 @@
+# ==============================================================================
+# .dockerignore - Arquivos e diretórios excluídos do contexto Docker
+# ==============================================================================
+
+# Dependências Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos de build e cache
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+.npm/
+.yarn/
+
+# Arquivos de desenvolvimento
+.env.local
+.env.development
+.env.test
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# Arquivos de teste
+coverage/
+.nyc_output/
+test-results/
+__tests__/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Arquivos de configuração de desenvolvimento
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Arquivos Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentação
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+*.md
+
+# Arquivos Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Arquivos de CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+
+# Arquivos de configuração local
+.env.example
+.env.sample
+fly.toml
+
+# Arquivos de backup
+*.bak
+*.backup
+*.old
+
+# Arquivos temporários do Prisma
+prisma/migrations/migration_lock.toml
+
+# Arquivos de configuração do editor
+.editorconfig
+.eslintrc*
+.prettierrc*
+jest.config.*
+tsconfig.json
+
+# Arquivos de monitoramento
+.monitoring/
+.observability/

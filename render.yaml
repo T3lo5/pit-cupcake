@@ -1,0 +1,163 @@
+# ==============================================================================
+# RENDER.YAML - INFRASTRUCTURE AS CODE PARA CUPCAKES APPLICATION
+# ==============================================================================
+# Este arquivo permite provisionar toda a infraestrutura no Render de uma vez:
+# - Aplicação Full Stack (API + Web)
+# - Banco de dados PostgreSQL
+# - Configurações automáticas
+# ==============================================================================
+
+services:
+  # ==============================================================================
+  # APLICAÇÃO PRINCIPAL - Full Stack (API + Web)
+  # ==============================================================================
+  - type: web
+    name: cupcakes-app
+    runtime: docker
+    plan: starter  # Pode ser: starter, standard, pro
+    region: oregon  # Escolha: oregon, frankfurt, singapore
+    branch: main
+    rootDir: .
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    
+    # Configurações de build
+    buildCommand: docker build -t cupcakes-app .
+    
+    # Configurações de runtime
+    startCommand: /app/start.sh
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Configurações de auto-deploy
+    autoDeploy: true
+    
+    # Variáveis de ambiente
+    envVars:
+      # Configurações gerais
+      - key: NODE_ENV
+        value: production
+      
+      - key: PORT
+        value: 8080
+      
+      # Database (será preenchido automaticamente pelo Render)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cupcakes-db
+          property: connectionString
+      
+      # JWT Secret (gerado automaticamente pelo Render)
+      - key: JWT_SECRET
+        generateValue: true
+      
+      # CORS - será a própria URL do serviço
+      - key: CORS_ORIGIN
+        fromService:
+          type: web
+          name: cupcakes-app
+          property: host
+      
+      # Configurações da API
+      - key: API_VERSION
+        value: v1
+      
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+      
+      # Configurações do Prisma
+      - key: PRISMA_CLI_QUERY_ENGINE_TYPE
+        value: binary
+      
+      # URL da API para o frontend (mesmo serviço)
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: cupcakes-app
+          property: host
+    
+    # Configurações de recursos
+    disk:
+      name: cupcakes-app-disk
+      sizeGB: 1
+      mountPath: /app/data
+    
+    # Configurações de rede
+    domains:
+      - name: cupcakes-app.onrender.com  # Substitua pelo seu domínio personalizado se tiver
+
+  # ==============================================================================
+  # BANCO DE DADOS POSTGRESQL
+  # ==============================================================================
+databases:
+  - name: cupcakes-db
+    databaseName: cupcakes
+    user: cupcakes_user
+    plan: starter  # Pode ser: starter, standard, pro
+    region: oregon  # Mesma região da aplicação
+    version: "15"  # Versão do PostgreSQL
+    
+    # Configurações de backup (apenas em planos pagos)
+    # ipAllowList:
+    #   - source: 0.0.0.0/0
+    #     description: Allow all connections (não recomendado para produção)
+
+# ==============================================================================
+# CONFIGURAÇÕES GLOBAIS
+# ==============================================================================
+
+# Configurações de notificação (opcional)
+# notifications:
+#   - type: email
+#     emails:
+#       - seu-email@exemplo.com
+#     events:
+#       - deploy-succeeded
+#       - deploy-failed
+
+# ==============================================================================
+# INSTRUÇÕES DE USO
+# ==============================================================================
+
+# Para usar este arquivo:
+# 1. Faça commit deste arquivo na raiz do seu repositório
+# 2. No Render Dashboard, vá em "Blueprint" -> "New Blueprint"
+# 3. Conecte seu repositório
+# 4. O Render lerá este arquivo e criará todos os recursos automaticamente
+# 5. Aguarde o deploy completar (pode levar alguns minutos)
+
+# ==============================================================================
+# RECURSOS CRIADOS AUTOMATICAMENTE
+# ==============================================================================
+
+# Este arquivo criará:
+# ✅ 1 Web Service (cupcakes-app) rodando na porta 8080
+# ✅ 1 PostgreSQL Database (cupcakes-db)
+# ✅ Todas as variáveis de ambiente configuradas
+# ✅ Conexão automática entre app e banco
+# ✅ Health checks configurados
+# ✅ Auto-deploy habilitado
+
+# ==============================================================================
+# URLS FINAIS
+# ==============================================================================
+
+# Após o deploy, você terá:
+# 🌐 Frontend: https://cupcakes-app.onrender.com
+# 🔌 API: https://cupcakes-app.onrender.com/api
+# 💾 Database: Conectado automaticamente via DATABASE_URL
+
+# ==============================================================================
+# CUSTOS ESTIMADOS (Plano Starter)
+# ==============================================================================
+
+# Web Service (Starter): $7/mês
+# PostgreSQL (Starter): $7/mês
+# Total estimado: $14/mês
+
+# Nota: Planos gratuitos têm limitações de tempo de atividade
+# Para produção, recomenda-se usar planos pagos
