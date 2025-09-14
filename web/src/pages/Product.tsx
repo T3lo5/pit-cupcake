@@ -22,13 +22,20 @@ export default function Product() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      {prod.images?.[0]?.url && (
-        <img
-          src={prod.images[0].url}
-          alt={prod.images[0].alt || prod.name}
-          className="w-full max-h-96 object-cover rounded"
-        />
+      {/* Galeria de imagens */}
+      {prod.images && prod.images.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {prod.images.map((image: any, index: number) => (
+            <img
+              key={index}
+              src={image.url}
+              alt={image.alt || `${prod.name} - Imagem ${index + 1}`}
+              className="w-full h-64 object-cover rounded"
+            />
+          ))}
+        </div>
       )}
+
       <h1 className="text-2xl font-semibold mt-4">{prod.name}</h1>
       <div className="text-slate-600">R$ {(prod.priceCents / 100).toFixed(2)}</div>
       <p className="mt-2">{prod.description}</p>

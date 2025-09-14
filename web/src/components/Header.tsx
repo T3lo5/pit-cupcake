@@ -26,6 +26,7 @@ export default function Header() {
               <Link to="/admin">Admin</Link>
               <Link to="/admin/products">Produtos</Link>
               <Link to="/admin/orders">Pedidos (Admin)</Link>
+              <Link to="/admin/banners">Banners</Link>
             </>
           )}{' '}
           {!isLogged() ? (

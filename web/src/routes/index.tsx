@@ -14,6 +14,7 @@ import AdminOrders from '../pages/Admin/Orders';
 import AdminOrderDetail from '../pages/Admin/OrderDetail';
 import NewAddress from '../pages/Addresses/NewAddress';
 import ListAddresses from '../pages/Addresses/ListAddresses';
+import AdminBanners from '../pages/Admin/AdminBanners';
 
 const routes: RouteObject[] = [
   {
@@ -67,6 +68,16 @@ const routes: RouteObject[] = [
           <RequireAuth>
             <RequireAdmin>
               <AdminProducts />
+            </RequireAdmin>
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'admin/banners',
+        element: (
+          <RequireAuth>
+            <RequireAdmin>
+              <AdminBanners />
             </RequireAdmin>
           </RequireAuth>
         ),

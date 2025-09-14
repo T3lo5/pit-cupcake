@@ -23,6 +23,9 @@ export default function AdminProducts() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     categoryId: '',
@@ -43,7 +46,7 @@ export default function AdminProducts() {
     try {
       const [p, c] = await Promise.all([
         api.get('/admin/products'),
-        api.get('/categories'), // ou '/admin/categories' se preferir restrito
+        api.get('/categories'),
       ]);
 
       const pData = Array.isArray(p.data) ? p.data : [];
@@ -73,19 +76,19 @@ export default function AdminProducts() {
   const onCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrMsg(null);
+    setIsCreating(true);
     try {
       const images = [form.image1, form.image2, form.image3]
         .map((s) => s.trim())
         .filter(Boolean)
         .map((url) => ({ url }));
 
-      // envia "price" em reais; backend converte para cents
       await api.post('/admin/products', {
         categoryId: form.categoryId,
         name: form.name.trim(),
         slug: form.slug.trim(),
         description: form.description?.trim() || null,
-        price: form.price, // "10,00" etc.
+        price: form.price,
         stock: Number(form.stock) || 0,
         active: form.active,
         images,
@@ -103,21 +106,30 @@ export default function AdminProducts() {
         image2: '',
         image3: '',
       }));
+      setSuccessMsg('Produto criado com sucesso!');
+      setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       console.error('Erro ao criar produto:', err);
       const msg = err?.response?.data?.message || err?.message || 'Erro ao criar produto';
       setErrMsg(msg);
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const toggleActive = async (id: string, active: boolean) => {
     setErrMsg(null);
+    setToggleLoading(id);
     try {
       await api.patch(`/admin/products/${id}/active`, { active });
       await load();
+      setSuccessMsg(`Produto ${active ? 'ativado' : 'desativado'} com sucesso!`);
+      setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Erro ao alterar status';
       setErrMsg(msg);
+    } finally {
+      setToggleLoading(null);
     }
   };
 
@@ -126,6 +138,9 @@ export default function AdminProducts() {
       <h1 className="text-2xl font-semibold">Produtos (Admin)</h1>
 
       {errMsg && <div className="p-3 border rounded bg-red-50 text-red-700">{errMsg}</div>}
+      {successMsg && (
+        <div className="p-3 border rounded bg-green-50 text-green-700">{successMsg}</div>
+      )}
 
       <form onSubmit={onCreate} className="border rounded p-4 grid gap-3">
         <div className="grid md:grid-cols-3 gap-3">
@@ -143,7 +158,6 @@ export default function AdminProducts() {
                   </option>
                 ))}
               </select>
-              {/* opcional: botão + Nova aqui */}
             </div>
             {!categories.length && (
               <div className="text-xs text-slate-500 mt-1">

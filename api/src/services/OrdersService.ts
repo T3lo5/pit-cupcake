@@ -1,5 +1,5 @@
 import { prisma } from '../libs/prisma.js';
-import { PayStatus, DeliveryStatus, OrderStatus, DeliveryMethod as DeliveryMethodEnum } from '@prisma/client';
+import { PayStatus, DeliveryStatus, OrderStatus, DeliveryMethod } from '@prisma/client';
 
 const FLOW: OrderStatus[] = [
   OrderStatus.CRIADO,
@@ -84,10 +84,7 @@ export async function createOrder(userId: string, body: CreateOrderInput) {
       },
       delivery: {
         create: {
-          method:
-            deliveryMethod === 'RETIRADA'
-              ? DeliveryMethodEnum.RETIRADA
-              : DeliveryMethodEnum.ENTREGA,
+          method: deliveryMethod === 'RETIRADA' ? DeliveryMethod.RETIRADA : DeliveryMethod.ENTREGA,
           status: DeliveryStatus.AGUARDANDO,
         },
       },
@@ -101,7 +98,23 @@ export async function createOrder(userId: string, body: CreateOrderInput) {
 export async function listOrders(userId: string) {
   return prisma.order.findMany({
     where: { userId },
-    include: { items: true, payment: true, delivery: true },
+    include: {
+      items: {
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              images: { take: 1 }
+            }
+          }
+        }
+      },
+      payment: true,
+      delivery: true,
+      address: true
+    },
     orderBy: { createdAt: 'desc' }
   });
 }
@@ -109,21 +122,68 @@ export async function listOrders(userId: string) {
 export async function getOrder(userId: string, orderId: string) {
   const order = await prisma.order.findFirst({
     where: { id: orderId, userId },
-    include: { items: true, payment: true, delivery: true }
+    include: {
+      items: {
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              images: { take: 1 }
+            }
+          }
+        }
+      },
+      payment: true,
+      delivery: true,
+      address: true
+    }
   });
   return order;
+}
+
+export async function getOrderTracking(userId: string, orderId: string) {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId
+    },
+    select: {
+      id: true,
+      status: true,
+      createdAt: true,
+      delivery: {
+        select: {
+          method: true,
+          status: true,
+          tracking: true,
+          updatedAt: true
+        }
+      }
+    }
+  });
+
+  if (!order) return null;
+
+  return {
+    orderId: order.id,
+    orderStatus: order.status,
+    orderDate: order.createdAt,
+    delivery: order.delivery
+  };
 }
 
 export async function pay(userId: string, orderId: string) {
   const order = await prisma.order.findFirst({ where: { id: orderId, userId }, include: { payment: true } });
   if (!order) throw { statusCode: 404, message: 'Pedido não encontrado' };
-  if (order.status !== 'CRIADO') throw { statusCode: 400, message: 'Pedido não está apto a pagamento' };
+  if (order.status !== OrderStatus.CRIADO) throw { statusCode: 400, message: 'Pedido não está apto a pagamento' };
 
   const updated = await prisma.order.update({
     where: { id: order.id },
     data: {
-      status: 'PAGO',
-      payment: { update: { status: 'CONFIRMADO', paidAt: new Date() } }
+      status: OrderStatus.PAGO,
+      payment: { update: { status: PayStatus.CONFIRMADO, paidAt: new Date() } }
     },
     include: { payment: true }
   });
@@ -134,10 +194,10 @@ export async function pay(userId: string, orderId: string) {
 export async function advanceStatus(orderId: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) throw { statusCode: 404, message: 'Pedido não encontrado' };
-  const idx = FLOW.indexOf(order.status as any);
+  const idx = FLOW.indexOf(order.status);
   if (idx === -1 || idx === FLOW.length - 1) throw { statusCode: 400, message: 'Fluxo não avançável' };
 
-  const next = FLOW[idx + 1] as any;
+  const next = FLOW[idx + 1];
   const updated = await prisma.order.update({ where: { id: orderId }, data: { status: next } });
   return { id: updated.id, status: updated.status };
 }

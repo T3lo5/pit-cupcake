@@ -7,12 +7,14 @@ export default function Login() {
   const [email, setEmail] = useState('admin@cupcakes.dev');
   const [password, setPassword] = useState('admin123');
   const [msg, setMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const setAuth = useAuth((s) => s.setAuth);
   const nav = useNavigate();
   const loc = useLocation() as any;
 
   const onLogin = async () => {
     setMsg(null);
+    setIsLoading(true);
     try {
       const r = await api.post('/auth/login', { email, password });
       const { user, accessToken, refreshToken } = r.data;
@@ -20,6 +22,8 @@ export default function Login() {
       nav(loc.state?.from?.pathname || '/', { replace: true });
     } catch (e: any) {
       setMsg(e?.response?.data?.message || 'Erro no login');
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -10,6 +10,11 @@ export async function listMine(req: Request, res: Response) {
   const result = await OrdersService.listOrders(req.user!.id);
   res.json(result);
 }
+export async function getTracking(req: Request, res: Response) {
+  const tracking = await OrdersService.getOrderTracking(req.user!.id, req.params.id);
+  if (!tracking) return res.status(404).json({ message: 'Informações de rastreamento não encontradas' });
+  res.json(tracking);
+}
 
 export async function getOne(req: Request, res: Response) {
   const order = await OrdersService.getOrder(req.user!.id, req.params.id);

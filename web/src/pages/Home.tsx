@@ -1,17 +1,22 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { Link } from 'react-router-dom';
+import BannerCarousel from '../components/Banner';
 
 export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
+
   useEffect(() => {
     api
       .get('/products')
       .then((r) => setProducts(r.data.items))
       .catch(console.error);
   }, []);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
+      <BannerCarousel />
+
       <h1 className="text-2xl font-semibold mb-4">Vitrine</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {products.map((p) => (

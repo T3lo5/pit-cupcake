@@ -152,7 +152,7 @@ http {
         # Servir arquivos estáticos do frontend
         location / {
             try_files \$uri \$uri/ /index.html;
-            
+
             # Headers de cache para assets
             location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
                 expires 1y;

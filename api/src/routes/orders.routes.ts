@@ -27,4 +27,6 @@ router.post('/:id/pay', OrdersController.pay);
 
 router.post('/:id/advance', requireAdmin, OrdersController.advanceStatus);
 
+router.get('/:id/tracking', OrdersController.getTracking);
+
 export default router;

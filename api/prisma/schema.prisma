@@ -3,8 +3,34 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  CRIADO
+  PAGO
+  EM_PREPARO
+  SAIU_PARA_ENTREGA
+  ENTREGUE
+  CANCELADO
+}
+
+enum PayStatus {
+  PENDENTE
+  CONFIRMADO
+  FALHOU
+}
+
+enum DeliveryStatus {
+  AGUARDANDO
+  ROTA
+  ENTREGUE
+}
+
+enum DeliveryMethod {
+  RETIRADA
+  ENTREGA
 }
 
 model User {
@@ -33,6 +59,7 @@ model Product {
   name        String
   slug        String         @unique
   description String?
+  banners     Banner[]
   priceCents  Int
   stock       Int            @default(0)
   active      Boolean        @default(true)
@@ -70,7 +97,7 @@ model Order {
   userId        String
   address       Address     @relation(fields: [addressId], references: [id])
   addressId     String
-  status        String      @default("CRIADO") // CRIADO, PAGO, EM_PREPARO, SAIU_PARA_ENTREGA, ENTREGUE, CANCELADO
+  status        OrderStatus @default(CRIADO)
   subtotalCents Int
   shippingCents Int         @default(0)
   discountCents Int         @default(0)
@@ -98,16 +125,34 @@ model Payment {
   orderId     String    @unique
   provider    String    // PIX, CREDIT_CARD, BOLETO
   providerRef String?
-  status      String    @default("PENDENTE") // PENDENTE, CONFIRMADO, FALHOU
+  status      PayStatus @default(PENDENTE)
   paidAt      DateTime?
 }
 
 model Delivery {
-  id        String   @id @default(cuid())
-  order     Order    @relation(fields: [orderId], references: [id])
-  orderId   String   @unique
-  method    String   // RETIRADA, ENTREGA
+  id        String         @id @default(cuid())
+  order     Order          @relation(fields: [orderId], references: [id])
+  orderId   String         @unique
+  method    DeliveryMethod
   tracking  String?
-  status    String   @default("AGUARDANDO") // AGUARDANDO, ROTA, ENTREGUE
+  status    DeliveryStatus @default(AGUARDANDO)
+  updatedAt DateTime       @updatedAt
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  image     String
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  link      String?
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  startDate DateTime @default(now())
+  endDate   DateTime?
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("banners")
 }

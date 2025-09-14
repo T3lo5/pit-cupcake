@@ -8,6 +8,7 @@ import adminOrders from './admin.orders.js';
 import adminProducts from './admin.products.js';
 import adminCategories from './admin.categories.js';
 import categoriesRouter from './categories.routes.js';
+import bannersRoutes from './banners.routes.js';
 
 const router = Router();
 
@@ -20,6 +21,7 @@ router.use('/admin', adminRoutes);
 router.use('/admin', adminOrders);
 router.use('/admin', adminProducts);
 router.use('/admin', adminCategories);
+router.use('/banners', bannersRoutes);
 
 router.use(categoriesRouter);
 
